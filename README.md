@@ -1,4 +1,4 @@
-## dev.austine
+# dev.austine - tech blog
 
 Welcome to latest trends
 
