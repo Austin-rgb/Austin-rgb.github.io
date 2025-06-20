@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loan Qualification Calculator</title>
+  <script src="plotly-latest.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      color: #333;
+    }
+
+    .container {
+      max-width: 90%;
+      margin: 1rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 1.4rem;
+      color: #2c3e50;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 1rem;
+      display: block;
+      font-size: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.3rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+    .section {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+    
+    footer{
+        text-align: center;
+        padding: 10px;
+    }
+
+    #plot {
+      width: 100%;
+      height: 60vh;
+      margin-top: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      h2 {
+        font-size: 1.75rem;
+      }
+
+      .container {
+        max-width: 700px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Loan Qualification Calculator</h2>
+<div class="section">
+    <h4>Salary details</h4>
+    <label for="basicSalary">Basic Salary (KSh):</label>
+    <input type="number" id="basicSalary" placeholder="e.g. 30000">
+
+    <label for="netSalary">Net Salary (KSh):</label>
+    <input type="number" id="netSalary" placeholder="e.g. 42000">
+
+      <label for="deductible">Ability Amount (KSh):</label>
+      <input type="number" id="deductible" placeholder="Auto-calculated or enter manually">
+    </div>
+    <div class="section">  
+        <h4>Loan details</h4>
+         <div class="pair">
+    <div class="field">
+      <label for="maxLoan">Max Loan (KSh):</label>
+      <input id="maxLoan" type="number" placeholder="e.g 10000">
+    </div>
+    
+  </div>
+
+  <div class="pair">
+    <div class="field">
+      <label for="minTerm">Min Term (months):</label>
+      <input id="minTerm" type="number" placeholder="e.g 12" value="120">
+    </div>
+    
+  </div></div>
+ 
+      <label for="deduction">Monthly Deduction (KSh):</label>
+      <input type="number" id="deduction" placeholder="Calculated from inputs" readonly>
+  
+    <button onclick="plotGraph()">Update Graph</button>
+
+    <div id="plot"></div>
+  </div>
+
+  <script>
+     class LqgUtility {
+    constructor() {
+        this.elements = {};
+        this.activeModifications = new Set();  // use a Set
+    }
+
+    add(elementId, typingHandler = () => {}, modificationHandler = () => {}) {
+        this.elements[elementId] = modificationHandler;
+        console.log("adding", elementId);
+        let elem = document.getElementById(elementId);
+        if (elem) {
+            elem.addEventListener("input", typingHandler);
+        } else {
+            console.warn(`Element '${elementId}' not found.`);
+        }
+    }
+
+    get(elementId) {
+        let elem = document.getElementById(elementId);
+        return elem ? parseFloat(elem.value) : NaN;
+    }
+
+    set(elementId, value) {
+    value = isNaN(value)?0:value
+        if (this.activeModifications.has(elementId)) {
+            return;  // Prevent recursion
+        }
+
+        this.activeModifications.add(elementId);
+        let elem = document.getElementById(elementId);
+        if (elem) {
+            elem.value = value;
+            if (typeof this.elements[elementId] === 'function') {
+                this.elements[elementId]();
+            }
+        }
+        this.activeModifications.delete(elementId); // proper removal
+    }
+
+    has(elementId) {
+        return document.getElementById(elementId) !== null;
+    }
+}
+
+var manager = new LqgUtility()
+    const mr = (term)=>{
+    switch(true){
+        case term<=3:return 0.058352
+        case term<=6:return 0.053077
+        case term<=18:return 0.052964
+        case term<=30:return 0.04426
+        case term<=36:return 0.036914
+        case term<=48:return 0.028797
+        case term<=60:return 0.027485
+        case term<=72:return 0.024502
+        case term<=96:return 0.025344
+        case term<=120:return 0.0235
+    }
+}
+
+function calculateMonthlyDeduction() {
+  const loan = manager.get("maxLoan");
+  const term = manager.get("minTerm");
+  
+
+  // Calculate monthly deduction
+  const afr = 0.125;
+  const appraisal = loan * (1 + afr);
+  const interest = appraisal * mr(term);
+  const monthlyPrincipal = appraisal / term;
+  const extraCharges = 240;
+  const totalMonthly = interest + monthlyPrincipal + extraCharges;
+
+  manager.set("deduction", totalMonthly.toFixed(2))
+}
+      
+    
+    function updateLoan(){
+        const monthlyPayment = manager.get("deductible")
+        const term = manager.get ("minTerm")  
+        if (!isNaN(monthlyPayment) && !isNaN(term)) {
+        const loan = maxLoanAmount(monthlyPayment, term)
+        manager .set("maxLoan",loan)
+         }
+         }
+         function updateTerm(){
+             const loan = manager.get("maxLoan")
+             const monthlyPayment =   manager.get("deductible")
+             const term = minTerm(loan, monthlyPayment);
+             manager.set("minTerm",term)
+                               }
+    // Automatically calculate deductible when salaries change
+    function onBasicChanged(){
+    updateDeductible()
+    updateLoan()
+    }  
+function onLoanChanged(){
+    updateTerm()
+}
+function onTermChanged(){
+    updateLoan()
+}
+function onDeductableChanged(){
+    updateLoan()
+}
+    
+    function updateDeductible() {
+      const basic = manager.get("basicSalary");
+      const net = manager.get("netSalary");
+
+      if (!isNaN(basic) && !isNaN(net)) {
+        const deductible = net - (basic / 3);
+        manager .set("deductible", deductible  >= 0 ? deductible.toFixed(2) : 0)
+        }
+        updateTerm()    }
+    
+      
+    function maxLoanAmount(monthlyPayment, term) {
+      const c = 240;
+      const rate = mr(term)
+      const appraisalFactor = 1.125;
+      const denom = appraisalFactor * (rate + (1 / term));
+      let loan = (monthlyPayment - c) / denom;
+      return loan>0?loan:0
+    }
+function minTerm(loan, monthlyPayment ){
+    for (let y = 1; y <= 120; y++) {
+        const x = maxLoanAmount(monthlyPayment, y);
+        if (x > loan) {
+          return y
+        }
+      }
+      
+        return 120
+}
+
+    function plotGraph() {
+      const M = manager.get("deductible");
+      if (isNaN(M) || M <= 0) {
+        
+        return;
+      }
+
+      const yValues = [];
+      const xValues = [];
+
+      for (let y = 1; y <= 120; y++) {
+        const x = maxLoanAmount(M, y);
+        if (x > 0) {
+          yValues.push(y);
+          xValues.push(x);
+        }
+      }
+
+      const maxLoan = Math.max(...xValues);
+
+      const curveTrace = {
+        x: xValues,
+        y: yValues,
+        mode: 'lines',
+        name: 'Max Loan Curve',
+        line: { color: '#2980b9', width: 3 }
+      };
+
+      const areaTrace = {
+        x: [0, ...xValues],
+        y: [1, ...yValues],
+        fill: 'tozerox',
+        fillcolor: 'rgba(46, 204, 113, 0.3)',
+        line: { color: 'transparent' },
+        type: 'scatter',
+        showlegend: false
+      };
+
+      const layout = {
+        title: `Loan Eligibility Curve`,
+        xaxis: { title: 'Loan Amount (KSh)', range: [0, maxLoan * 1.1], tickformat: ',d' },
+        yaxis: { title: 'Loan Duration (Months)', range: [0, 120] },
+        margin: { l: 50, r: 30, t: 50, b: 50 },
+        responsive: true
+      };
+
+      Plotly.newPlot('plot', [areaTrace, curveTrace], layout, {responsive: true});
+    }
+
+    window.onload = () => {
+      updateDeductible();
+      plotGraph();
+    };
+    manager.add("basicSalary",onBasicChanged)
+    manager.add("netSalary",updateDeductible)
+    manager.add("deductible",onDeductableChanged)
+    manager.add("maxLoan",calculateMonthlyDeduction,onLoanChanged)
+    manager.add("minTerm",calculateMonthlyDeduction,onTermChanged)
+  </script>
+  
+  <footer>
+    <p>Humbly developed by <a href="https://github.com/Austin-rgb">Austine</a> for Platinum Credit Limited</p>  
+  &copy; <span id="year"></span> Ochieng Austine. All rights reserved.
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
