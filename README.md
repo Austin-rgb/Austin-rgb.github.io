@@ -2,7 +2,7 @@
 
 Welcome to latest trends
 
-- [Loan Calculator](/lqg2.html) - Loan Calculator for Platinum Credit Limited 
+- [Loan Calculator](https:/Austin-rgb.github.io/lqg2.html) - Loan Calculator for Platinum Credit Limited 
 
 - [Cpu vs Gpu](/cpu-vs-gpu.md)
 
