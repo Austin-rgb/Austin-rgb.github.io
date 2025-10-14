@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+  <title>Tile Carton Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .calculator {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 340px;
+      text-align: center;
+    }
+    input, select {
+      width: 90%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #result {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <h2>Tile Carton Calculator</h2>
+
+    <label>Length of floor:</label>
+    <input type="number" id="length" placeholder="Enter length" required><br>
+
+    <label>Width of floor:</label>
+    <input type="number" id="width" placeholder="Enter width" required><br>
+
+    <label>Unit of measure:</label>
+    <select id="unit">
+      <option value="m">Meters</option>
+      <option value="ft">Feet</option>
+      <option value="in">Inch</option>
+    </select><br>
+
+    <label>Carton type:</label>
+    <select id="carton">
+      <option value="44">40x40cm (12 pieces per carton)</option>
+      <option value="33">30x30cm (17 pieces per carton)</option>
+      <option value="24">25x40cm (15 pieces per carton)</option>
+    </select><br>
+
+    <button onclick="calculateCartons()">Calculate</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function calculateCartons() {
+      const length = parseFloat(document.getElementById('length').value);
+      const width = parseFloat(document.getElementById('width').value);
+      const unit = document.getElementById('unit').value;
+      const cartonType = document.getElementById('carton').value;
+
+      if (isNaN(length) || isNaN(width) || length <= 0 || width <= 0) {
+        document.getElementById('result').innerHTML = "⚠️ Please enter valid positive numbers.";
+        return;
+      }
+
+      // Convert feet to meters if needed
+      let length_m = length;
+      let width_m = width;
+      if (unit === "ft") {
+        length_m *= 0.3048;
+        width_m *= 0.3048;
+      }else if (unit === "in"){
+          length_m = (length_m/12)*0.3048
+          width_m = (width_m/12)*0.3048
+      }
+
+      // Calculate floor area in square meters
+      const area = length_m * width_m;
+
+      // Calculate carton coverage based on choice
+      let coverage = 0;
+      if (cartonType === "44") {
+        // 40cm x 40cm tile = 0.16 m² each, 12 pieces per carton
+        coverage = 0.16 * 12; // 1.92 m²
+      } else if (cartonType === "33") {
+        // 30cm x 30cm tile = 0.09 m² each, 17 pieces per carton
+        coverage = 0.09 * 17; // 1.53 m²
+      }else if (cartonType === "24"){
+          coverage = 0.25*0.4*15
+      }
+
+      // Number of cartons required
+      const cartons = Math.ceil(area / coverage);
+
+      document.getElementById('result').innerHTML =
+        `Floor area: ${area.toFixed(2)} m² <br>
+         Carton coverage: ${coverage.toFixed(2)} m² <br>
+         Cartons required: ${cartons}`;
+    }
+  </script>
+</body>
+</html>
