@@ -1,6 +1,7 @@
 # dev.austine - tech blog
 
 Welcome to latest trends
+- [Tiles cartons calculator](https://Austin-rgb.github.io/tiles.html)
 
 - [Loan Calculator](https://Austin-rgb.github.io/lqg2.html) - Loan Calculator for Platinum Credit Limited 
 
