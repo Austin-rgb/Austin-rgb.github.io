@@ -2,7 +2,7 @@
 
 Welcome to latest trends
 - [Tiles cartons calculator](https://Austin-rgb.github.io/tiles.html)
-
+- [Price Calculator](https://Austin-rgb.github.io/price-calculator.html)
 - [Loan Calculator](https://Austin-rgb.github.io/lqg2.html) - Loan Calculator for Platinum Credit Limited 
 
 - [Cpu vs Gpu](/cpu-vs-gpu.md)
